@@ -55,7 +55,7 @@ function runSingleTrial(
         var personRight = `${stimFolder}person_${stripe_angle_top-difficulty}.png`
     }
     
-    var persistent_prompt = `<div style="position: fixed; top: 90%; left: 50%; transform: translateX(-50%); text-align: center;">f = same stripes; j = different stripes </div>`;
+    var persistent_prompt = `<div style="position: fixed; top: 90%; left: 50%; transform: translateX(-50%); text-align: center;"></div>`;
 
     /* testing a slider */
     // tarSize = 40;
@@ -186,13 +186,25 @@ function runSingleTrial(
             htmloutput += `<img src="${personRight}" style="width: ${imgStripePeopleWidth}px; position: absolute; top: ${imgBackHeight*1.03-(imgPeopleHeight/2)}px; left: ${imgBackWidth*0.95-(imgPeopleWidth/2)}px;"></img></div>`
             return htmloutput;
         },
-        choices: ['f', 'j'],
-        trial_duration: null,
-        response_ends_trial: true,
+        choices: 'NO_KEYS',
+        trial_duration: FULL_SCENE_DISP_TIME,
+        response_ends_trial: false,
         prompt: `${persistent_prompt}`,
         data: {
             trial_category: 'answer'+trialType,
-            // trial_stimulus: thisStim,
+        } // data end
+    }; // dispScene
+
+
+    var holdResponse = {
+        type: jsPsychHtmlButtonSpaceHoldResponse,
+        // stimulus: `Now please try to <b>reproduce how long</b> the image stayed on screen. Click and hold down the button below for the same amount of time that you saw the image. <p>Releasing the button will <b>automatically submit</b> your response!</p><p>You have <b>only ONE try!</b></p>`,
+        stimulus: `Now try to replicate how long the image was on screen (Use the <u>Spacebar</u>):`,
+        choices: ["Click, hold, and release the Spacebar for the right amount of time!"],
+        show_hold_duration_feedback: false,
+        retries_allowed: null, // change to a number of allowed retries. Default is null.
+        data: {
+            trial_category: 'answer'+trialType,
             trial_rotation: trialRotation,
             shapes_rotation: rotation,
             trial_reflection: trialReflection,
@@ -205,46 +217,26 @@ function runSingleTrial(
             screen_height: h,
         }, // data end
         on_finish: function(data){
-            if (identical == true) {
-                if(data.response == 'f') {
-                    data.thisAcc = 1;
-                } else if (data.response == 'j') {
-                    data.thisAcc = 0;
-                } else {
-                    data.thisAcc = 99;
-                }
-            } else if (identical == false){
-                if(data.response == 'j') {
-                    data.thisAcc = 1;
-                } else if (data.response == 'f') {
-                    data.thisAcc = 0;
-                } else {
-                    data.thisAcc = 99;
-                }
-            }
+            data.thisDifference = data.hold_duration - (PERSON_ONE_DISP_TIME + PERSON_ONE_DISP_TIME + FULL_SCENE_DISP_TIME)
         } // on finish end
-    }; // dispScene
+    }; // holdResponse end
 
-
-
-
-    // var prestim = {
-    //     type: jsPsychHtmlKeyboardResponse,
-    //     stimulus: `<div> gray box</div>`,
-    //     prompt: `${persistent_prompt}`,
-    //     choices: "NO_KEYS",
-    //     trial_duration: PRESTIM_DISP_TIME,
-    //     data: {
-    //         trial_category: 'prestim_ISI' + trialType,
-    //     }
-    // };
+    var prestim = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size:60px; z-index:2">+</div>`,
+        prompt: `${persistent_prompt}`,
+        choices: "NO_KEYS",
+        trial_duration: PRESTIM_DISP_TIME,
+        data: {
+            trial_category: 'prestim_ISI' + trialType,
+        }
+    };
 
     var fixation = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `<div style="position: absolute; top: ${h/2-imgBorderHeight/2}px; left: ${w/2-imgBorderWidth/2}px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(${trialRotation}deg) scaleX(${trialReflection});">        
                 <img src="${stimFolder}background_border.png" style="width: ${imgBorderWidth}px; display:block;"></img> 
-        </div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size:60px; z-index:2">+</div>`,
+        </div>`,
         prompt: `${persistent_prompt}`,
         choices: "NO_KEYS",
         trial_duration: FIXATION_DISP_TIME,
@@ -269,11 +261,12 @@ function runSingleTrial(
 
     timelineTrialsToPush.push(if_notFull);
     timelineTrialsToPush.push(cursor_off);
-    // timelineTrialsToPush.push(prestim);
+    timelineTrialsToPush.push(prestim);
     timelineTrialsToPush.push(fixation); 
     timelineTrialsToPush.push(dispOneThirdScene); 
     timelineTrialsToPush.push(dispHalfScene); 
     timelineTrialsToPush.push(dispFullScene); 
+    timelineTrialsToPush.push(holdResponse);
     // timelineTrialsToPush.push(dispCircleSlider); // if you wanted to use the slider reproduction measurement tool
     timelineTrialsToPush.push(cursor_on);
 

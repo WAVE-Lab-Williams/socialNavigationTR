@@ -6,17 +6,18 @@ Defining Parameter Variables
 
 var stimFolder = 'src/assets/stimuli/people/'
 
-var runIntro = true;
-var runInstr = true;
+var runIntro = false;
+var runInstr = false;
 var runExpt = true;
 var runClose = true;
 var runPreload = true;
 
 // Defining Core Variables that remain constant
-// var PRESTIM_DISP_TIME = 800;
+var PRESTIM_DISP_TIME = 800;
 var FIXATION_DISP_TIME = 600;
-var BACKGROUND_DISP_TIME = 300; //now +100 7/9/26
+var BACKGROUND_DISP_TIME = 300; //NOT USED
 var PERSON_ONE_DISP_TIME = 400; //now +100 7/9/26
+var FULL_SCENE_DISP_TIME = 500; //ms
 var LEFT_CENTROID = [165, 230];
 var RIGHT_CENTROID = [435, 380];
 var CENTROIDS = [LEFT_CENTROID, RIGHT_CENTROID];
