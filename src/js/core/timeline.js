@@ -245,7 +245,8 @@ console.log(full_design.length);
 // }
 for (var i = 0; i < 11; i++) { //allPeopleColors is an array of size 12 (hence 11) BUT it is instantiated in trial.js (after timeline.js in index.html) thus this must be hard-coded :)
      forPreload.push(`${stimFolder}${allPeopleColors[i]}.png`);
-     forPreload.push(`${stimFolder}/sitting/${allPeopleColors[i]}.png`);
+     forPreload.push(`${stimFolder}sitting/${allPeopleColors[i]}.png`);
+     forPreload.push(`${stimFolder}colors/${allPeopleColors[i]}.png`);
 }
 
 /* ------- timeline expt push (*pushExpt ) -------------- */

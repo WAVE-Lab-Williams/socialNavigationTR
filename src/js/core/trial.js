@@ -144,12 +144,15 @@ function runSingleTrial(
 
     /* Function to test attention */
 
-    var afcChoices = [`<img src="${stimFolder}/colors/${allPeople[randomIntFromRange(0, 5)]}.png" style="width: ${imgWidth}px;">`,
-     `<img src="${stimFolder}/colors/${allPeople[randomIntFromRange(6, 11)]}.png" style=:"width: ${imgWidth}px;">`] //Note that our array of people is 12 people, so the first shuffled 6 will be guarenteed on screen!
+    var afcChoices = [`<img id="correct" src="${stimFolder}/colors/${allPeople[randomIntFromRange(0, 5)]}.png" style="width: ${imgWidth}px;">`,
+     `<img id="incorrect" src="${stimFolder}/colors/${allPeople[randomIntFromRange(6, 11)]}.png" style=:"width: ${imgWidth}px;">`] //Note that our array of people is 12 people, so the first shuffled 6 will be guarenteed on screen!
+
+    afcChoices = shuffle(afcChoices);
+    
 
     var attentionCheckAFC = {
         type: jsPsychHtmlButtonResponse,
-        stimulus: `<h1>Select the color that appeared in the image you <i>just</i> saw:</h1>`,
+        stimulus: `<h1>In the image you just saw, which of these two colors appeared on one of the people?</h1>`,
         choices: afcChoices,
         button_html: `<button style="background-color: #afafaf; border-width: 5px; border-radius: 14px; margin-bottom: 10px;" class="jspsych-btn image-choice">%choice%</button>`,
         data: {
@@ -161,9 +164,9 @@ function runSingleTrial(
                 data.chosen_image = "timedout";
                 data.thisAcc = 98;
             } else {
-                if(data.response == 0) {
+                if(afcChoices[data.response].id === "correct") { //note that data.response is 0 for left and 1 for right
                     data.thisAcc = 1;
-                } else if(data.response == 1) {
+                } else if(afcChoices[data.response].id === "incorrect") {
                     data.thisAcc = 0;
                 } else {
                     data.thisAcc = 99;
@@ -290,7 +293,8 @@ function runSingleTrial(
     //timelineTrialsToPush.push(dispHalfScene); 
     timelineTrialsToPush.push(dispFullScene); 
     timelineTrialsToPush.push(holdResponse);
-    if(elem % 6 == 0) { //attention check every 6 trials!
+    if((elem != 0) && (elem % 6 == 0)) { //attention check every 6 trials! (note: not inclusive of first trial?)
+        console.log(afcChoices);
         timelineTrialsToPush.push(attentionCheckAFC); 
     };
     // timelineTrialsToPush.push(dispCircleSlider); // if you wanted to use the slider reproduction measurement tool

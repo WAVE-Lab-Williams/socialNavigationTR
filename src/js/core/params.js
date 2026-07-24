@@ -55,7 +55,7 @@ var h =
 console.log(w,h)
 
 // setting display image width
-var imgWidth = 300; // for our AFC color images
+var imgWidth = 250; // for our AFC color images
 var origBackWidth = 600;
 var origBackHeight = 600;
 var origPeopleWidth = 612;
