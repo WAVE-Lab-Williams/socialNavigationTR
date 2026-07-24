@@ -144,16 +144,18 @@ function runSingleTrial(
 
     /* Function to test attention */
 
-    var afcChoices = [`<img id="correct" src="${stimFolder}/colors/${allPeople[randomIntFromRange(0, 5)]}.png" style="width: ${imgWidth}px;">`,
-     `<img id="incorrect" src="${stimFolder}/colors/${allPeople[randomIntFromRange(6, 11)]}.png" style=:"width: ${imgWidth}px;">`] //Note that our array of people is 12 people, so the first shuffled 6 will be guarenteed on screen!
+    // var afcChoices = [`<img id="correct" src="${stimFolder}/colors/${allPeople[randomIntFromRange(0, 5)]}.png" style="width: ${imgWidth}px;">`,
+    //  `<img id="incorrect" src="${stimFolder}/colors/${allPeople[randomIntFromRange(6, 11)]}.png" style=:"width: ${imgWidth}px;">`] //Note that our array of people is 12 people, so the first shuffled 6 will be guarenteed on screen!
 
-    afcChoices = shuffle(afcChoices);
+    // afcChoices = shuffle(afcChoices);
     
+
+    var [firstHalf, secondHalf] = cutArray(allPeople);
 
     var attentionCheckAFC = {
         type: jsPsychHtmlButtonResponse,
-        stimulus: `<h1>In the image you just saw, which of these two colors appeared on one of the people?</h1>`,
-        choices: afcChoices,
+        stimulus: `<h1>In the image you just saw, was there a person wearing red?</h1>`,
+        choices: ['Yes', 'No'],
         button_html: `<button style="background-color: #afafaf; border-width: 5px; border-radius: 14px; margin-bottom: 10px;" class="jspsych-btn image-choice">%choice%</button>`,
         data: {
             trial_category: "afc" + trialType
@@ -161,15 +163,12 @@ function runSingleTrial(
         trial_duration: null, 
         on_finish: function(data){
             if (data.response == null) {
-                data.chosen_image = "timedout";
-                data.thisAcc = 98;
+                data.thisAcc = 99;
             } else {
-                if(afcChoices[data.response].id === "correct") { //note that data.response is 0 for left and 1 for right
+                if(data.response == 1 && firstHalf.includes("red")) { 
                     data.thisAcc = 1;
-                } else if(afcChoices[data.response].id === "incorrect") {
-                    data.thisAcc = 0;
                 } else {
-                    data.thisAcc = 99;
+                    data.thisAcc = 0;
                 }
             }
         }//end on finish
@@ -284,7 +283,7 @@ function runSingleTrial(
 
 
     /*--------------------------- push single trial sequence ---------------------------*/
-
+    
     timelineTrialsToPush.push(if_notFull);
     timelineTrialsToPush.push(cursor_off);
     timelineTrialsToPush.push(prestim);
@@ -294,7 +293,7 @@ function runSingleTrial(
     timelineTrialsToPush.push(dispFullScene); 
     timelineTrialsToPush.push(holdResponse);
     if((elem != 0) && (elem % 6 == 0)) { //attention check every 6 trials! (note: not inclusive of first trial?)
-        console.log(afcChoices);
+        timelineTrialsToPush.push(cursor_on);
         timelineTrialsToPush.push(attentionCheckAFC); 
     };
     // timelineTrialsToPush.push(dispCircleSlider); // if you wanted to use the slider reproduction measurement tool
