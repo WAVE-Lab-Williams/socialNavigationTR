@@ -14,14 +14,14 @@ var runPreload = true;
 
 // Defining Core Variables that remain constant
 var PRESTIM_DISP_TIME = 800;
-var FIXATION_DISP_TIME = 600;
-var BACKGROUND_DISP_TIME = 300; //NOT USED
-var PERSON_ONE_DISP_TIME = 400; //now +100 7/9/26
-var FULL_SCENE_DISP_TIME = 500; //ms
+var FIXATION_DISP_TIME = 0; // FIX THE VARIABLE NAMES
+// var BACKGROUND_DISP_TIME = 300; //NOT USED
+var PERSON_ONE_DISP_TIME = 0; //now +100 7/9/26
+var FULL_SCENE_DISP_TIME = 2000; //ms
 var LEFT_CENTROID = [165, 230];
 var RIGHT_CENTROID = [435, 380];
 var CENTROIDS = [LEFT_CENTROID, RIGHT_CENTROID];
-var RADIUS = 65; 
+var RADIUS = 70; 
 var allPeopleColors = ["red", "orange1", "orange2", "green1", "green3", "blue2", "blue3", "blue4", "blue5", "purple", "magenta", "pink"];
 
 // Variables for Participant Information
@@ -55,6 +55,7 @@ var h =
 console.log(w,h)
 
 // setting display image width
+var imgWidth = 300; // for our AFC color images
 var origBackWidth = 600;
 var origBackHeight = 600;
 var origPeopleWidth = 612;
@@ -69,7 +70,7 @@ if (h < 400) {
     var imgPeopleWidth = 55; // your desired display img width
 } else {
     var imgBackWidth = 500; // your desired display img width
-    var imgPeopleWidth = 65; // your desired display img width
+    var imgPeopleWidth = 68; // your desired display img width
 }
     var scalingBackRatio = (imgBackWidth / origBackWidth);
     var scalingPeopleRatio = (imgPeopleWidth / origPeopleWidth);

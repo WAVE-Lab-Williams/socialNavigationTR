@@ -4,10 +4,9 @@ PUSHING/RUNNING A CUSTOM SINGLE TRIAL (*singleTrial)
 ===============================================================
 */
 function runSingleTrial(
-    stripe_angle_top,
+    trialNumber,
     rotation,
-    identical,
-    difficulty,
+    dispTime,
     group,
     timelineTrialsToPush,
     trialType,
@@ -48,12 +47,12 @@ function runSingleTrial(
     };
 
     /*--------------------------- Experiment specific variables ---------------------------*/
-    var personLeft = `${stimFolder}person_${stripe_angle_top}.png`
-    if (identical == true){
-        var personRight = personLeft
-    } else {
-        var personRight = `${stimFolder}person_${stripe_angle_top-difficulty}.png`
-    }
+    //var personLeft = `${stimFolder}person_${stripe_angle_top}.png`
+    // if (identical == true){
+    //     var personRight = personLeft
+    // } else {
+    //     var personRight = `${stimFolder}person_${stripe_angle_top-difficulty}.png`
+    // }
     
     var persistent_prompt = `<div style="position: fixed; top: 90%; left: 50%; transform: translateX(-50%); text-align: center;"></div>`;
 
@@ -93,6 +92,7 @@ function runSingleTrial(
     //         trial_category: 'prestimBackground'+trialType,
     //     }, // data end
     // }; // dispCircle end
+
 
 
     /* Rotation and Reflection Logic */
@@ -142,6 +142,36 @@ function runSingleTrial(
         htmloutput += `</div>`;
 
 
+    /* Function to test attention */
+
+    var afcChoices = [`<img src="${stimFolder}/colors/${allPeople[randomIntFromRange(0, 5)]}.png" style="width: ${imgWidth}px;">`,
+     `<img src="${stimFolder}/colors/${allPeople[randomIntFromRange(6, 11)]}.png" style=:"width: ${imgWidth}px;">`] //Note that our array of people is 12 people, so the first shuffled 6 will be guarenteed on screen!
+
+    var attentionCheckAFC = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<h1>Select the color that appeared in the image you <i>just</i> saw:</h1>`,
+        choices: afcChoices,
+        button_html: `<button style="background-color: #afafaf; border-width: 5px; border-radius: 14px; margin-bottom: 10px;" class="jspsych-btn image-choice">%choice%</button>`,
+        data: {
+            trial_category: "afc" + trialType
+        },
+        trial_duration: null, 
+        on_finish: function(data){
+            if (data.response == null) {
+                data.chosen_image = "timedout";
+                data.thisAcc = 98;
+            } else {
+                if(data.response == 0) {
+                    data.thisAcc = 1;
+                } else if(data.response == 1) {
+                    data.thisAcc = 0;
+                } else {
+                    data.thisAcc = 99;
+                }
+            }
+        }//end on finish
+    };
+
 
 
     /* Displaying the scene/ trial fxns */
@@ -181,13 +211,9 @@ function runSingleTrial(
 
     var dispFullScene = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: function() {
-            htmloutput = htmloutput.replace(`</div>`, ``);
-            htmloutput += `<img src="${personRight}" style="width: ${imgStripePeopleWidth}px; position: absolute; top: ${imgBackHeight*1.03-(imgPeopleHeight/2)}px; left: ${imgBackWidth*0.95-(imgPeopleWidth/2)}px;"></img></div>`
-            return htmloutput;
-        },
+        stimulus: htmloutput,
         choices: 'NO_KEYS',
-        trial_duration: FULL_SCENE_DISP_TIME,
+        trial_duration: dispTime,
         response_ends_trial: false,
         prompt: `${persistent_prompt}`,
         data: {
@@ -205,14 +231,11 @@ function runSingleTrial(
         retries_allowed: null, // change to a number of allowed retries. Default is null.
         data: {
             trial_category: 'answer'+trialType,
+            trial_dispTime: dispTime,
             trial_rotation: trialRotation,
             shapes_rotation: rotation,
             trial_reflection: trialReflection,
-            stripe_angle_top: stripe_angle_top,
-            stripe_angle_bottom: stripe_angle_top-difficulty,
-            difficulty: difficulty,
             background_group: group,
-            identical: identical,
             screen_width: w,
             screen_height: h,
         }, // data end
@@ -264,9 +287,12 @@ function runSingleTrial(
     timelineTrialsToPush.push(prestim);
     timelineTrialsToPush.push(fixation); 
     timelineTrialsToPush.push(dispOneThirdScene); 
-    timelineTrialsToPush.push(dispHalfScene); 
+    //timelineTrialsToPush.push(dispHalfScene); 
     timelineTrialsToPush.push(dispFullScene); 
     timelineTrialsToPush.push(holdResponse);
+    if(elem % 6 == 0) { //attention check every 6 trials!
+        timelineTrialsToPush.push(attentionCheckAFC); 
+    };
     // timelineTrialsToPush.push(dispCircleSlider); // if you wanted to use the slider reproduction measurement tool
     timelineTrialsToPush.push(cursor_on);
 
