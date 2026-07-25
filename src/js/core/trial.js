@@ -125,18 +125,18 @@ function runSingleTrial(
                 if(i <= 2) {
                     htmloutput += `<img src="${stimFolder}${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 } else {
-                    htmloutput += `<img src="${stimFolder}/sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
+                    htmloutput += `<img src="${stimFolder}sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 }
             };
             if(group === "L_H") {
                 if(i <= 2) {
-                    htmloutput += `<img src="${stimFolder}/sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
+                    htmloutput += `<img src="${stimFolder}sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 } else {
                     htmloutput += `<img src="${stimFolder}${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 }
             };
             if(group === "L_L") {
-                htmloutput += `<img src="${stimFolder}/sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
+                htmloutput += `<img src="${stimFolder}sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
             };
         }; // end for loop!
         htmloutput += `</div>`;
@@ -182,7 +182,7 @@ function runSingleTrial(
 
     var dispOneThirdScene = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: htmloutput,
+        stimulus: htmloutput+`</div>`,
         choices: 'NO_KEYS',
         trial_duration: PERSON_ONE_DISP_TIME,
         response_ends_trial: false,
@@ -197,7 +197,7 @@ function runSingleTrial(
     var dispHalfScene = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function() {
-            htmloutput = htmloutput.replace(`</div>`, ``);
+            // htmloutput = htmloutput.replace(`</div>`, ``);
             htmloutput += `<img src="${personLeft}" style="width: ${imgStripePeopleWidth}px; position: absolute; top: ${imgBackHeight*.18-(imgPeopleHeight/2)}px; left: ${imgBackWidth*.25-(imgPeopleWidth/2)}px; z-index: 999; transform: rotate(180deg);"></img></div>`;
             return htmloutput;
         },
@@ -215,7 +215,7 @@ function runSingleTrial(
 
     var dispFullScene = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: htmloutput,
+        stimulus: htmloutput+`</div>`,
         choices: 'NO_KEYS',
         trial_duration: dispTime,
         response_ends_trial: false,
