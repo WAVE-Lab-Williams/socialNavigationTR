@@ -13,8 +13,8 @@ var runClose = true;
 var runPreload = true;
 
 // Defining Core Variables that remain constant
-var BACKGROUND_DISP_TIME = 800;
-var CROSS_DISP_TIME = 0; 
+var BACKGROUND_DISP_TIME = 0;
+var CROSS_DISP_TIME = 800; 
 // var BACKGROUND_DISP_TIME = 300; //NOT USED
 var PERSON_ONE_DISP_TIME = 0; 
 var FULL_SCENE_DISP_TIME = 2000; //ms
