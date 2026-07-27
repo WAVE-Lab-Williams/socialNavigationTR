@@ -243,8 +243,8 @@ console.log(full_design.length);
 // for (var i = 0; i < poss_stripe_angles.length; i++) {
 //      forPreload.push(`${stimFolder}person_${poss_stripe_angles[i]}.png`);
 // }
-for (var i = 0; i < 11; i++) { //allPeopleColors is an array of size 12 (hence 11) BUT it is instantiated in trial.js (after timeline.js in index.html) thus this must be hard-coded :)
-     forPreload.push(`${stimFolder}${allPeopleColors[i]}.png`);
+forPreload.push(`${stimFolder}background_border.png`);
+for (var i = 0; i < allPeopleColors.length; i++) { // allPeopleColors is actually defined in params.js (so its loaded before timeline. Totally fine to use this variable.)
      forPreload.push(`${stimFolder}sitting/${allPeopleColors[i]}.png`);
      forPreload.push(`${stimFolder}colors/${allPeopleColors[i]}.png`);
 }
