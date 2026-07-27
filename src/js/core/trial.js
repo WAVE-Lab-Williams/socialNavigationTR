@@ -4,10 +4,9 @@ PUSHING/RUNNING A CUSTOM SINGLE TRIAL (*singleTrial)
 ===============================================================
 */
 function runSingleTrial(
-    stripe_angle_top,
+    trialNumber,
     rotation,
-    identical,
-    difficulty,
+    dispTime,
     group,
     timelineTrialsToPush,
     trialType,
@@ -48,14 +47,14 @@ function runSingleTrial(
     };
 
     /*--------------------------- Experiment specific variables ---------------------------*/
-    var personLeft = `${stimFolder}person_${stripe_angle_top}.png`
-    if (identical == true){
-        var personRight = personLeft
-    } else {
-        var personRight = `${stimFolder}person_${stripe_angle_top-difficulty}.png`
-    }
+    //var personLeft = `${stimFolder}person_${stripe_angle_top}.png`
+    // if (identical == true){
+    //     var personRight = personLeft
+    // } else {
+    //     var personRight = `${stimFolder}person_${stripe_angle_top-difficulty}.png`
+    // }
     
-    var persistent_prompt = `<div style="position: fixed; top: 90%; left: 50%; transform: translateX(-50%); text-align: center;">f = same stripes; j = different stripes </div>`;
+    var persistent_prompt = `<div style="position: fixed; top: 90%; left: 50%; transform: translateX(-50%); text-align: center;"></div>`;
 
     /* testing a slider */
     // tarSize = 40;
@@ -95,6 +94,7 @@ function runSingleTrial(
     // }; // dispCircle end
 
 
+
     /* Rotation and Reflection Logic */
     var poss_trialRotations = [0, 90, 180]; // this one is in degrees!
 
@@ -125,22 +125,56 @@ function runSingleTrial(
                 if(i <= 2) {
                     htmloutput += `<img src="${stimFolder}${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 } else {
-                    htmloutput += `<img src="${stimFolder}/sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
+                    htmloutput += `<img src="${stimFolder}sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 }
             };
             if(group === "L_H") {
                 if(i <= 2) {
-                    htmloutput += `<img src="${stimFolder}/sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
+                    htmloutput += `<img src="${stimFolder}sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 } else {
                     htmloutput += `<img src="${stimFolder}${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
                 }
             };
             if(group === "L_L") {
-                htmloutput += `<img src="${stimFolder}/sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
+                htmloutput += `<img src="${stimFolder}sitting/${allPeople[i]}.png" style = "position: absolute; top: ${all_points[i].y}px; left: ${all_points[i].x}px; width: ${imgPeopleWidth}px; transform: translate(-50%, -50%) rotate(${all_points[i].r}deg);"></img>`;
             };
         }; // end for loop!
         htmloutput += `</div>`;
 
+
+    /* Function to test attention */
+
+    // var afcChoices = [`<img id="correct" src="${stimFolder}/colors/${allPeople[randomIntFromRange(0, 5)]}.png" style="width: ${imgWidth}px;">`,
+    //  `<img id="incorrect" src="${stimFolder}/colors/${allPeople[randomIntFromRange(6, 11)]}.png" style=:"width: ${imgWidth}px;">`] //Note that our array of people is 12 people, so the first shuffled 6 will be guarenteed on screen!
+
+    // afcChoices = shuffle(afcChoices);
+    
+
+    var [firstHalf, secondHalf] = cutArray(allPeople);
+
+    var attentionCheckAFC = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<h1>In the image you just saw, was there a person wearing red?</h1>`,
+        choices: ['Yes', 'No'],
+        button_html: `<button style="background-color: #afafaf; border-width: 5px; border-radius: 14px; margin-bottom: 10px; font-size: 48px; width: ${imgWidth}px;" class="jspsych-btn image-choice">%choice%</button>`,
+        data: {
+            trial_category: "afc" + trialType
+        },
+        trial_duration: null, 
+        on_finish: function(data){
+            if (data.response == null) {
+                data.thisAcc = 99;
+            } else {
+                if(data.response == 1 && firstHalf.includes("red")) { 
+                    console.log("correct")
+                    data.thisAcc = 1;
+                } else {
+                    console.log("incorrect")
+                    data.thisAcc = 0;
+                }
+            }
+        }//end on finish
+    };
 
 
 
@@ -148,7 +182,7 @@ function runSingleTrial(
 
     var dispOneThirdScene = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: htmloutput,
+        stimulus: htmloutput+`</div>`,
         choices: 'NO_KEYS',
         trial_duration: PERSON_ONE_DISP_TIME,
         response_ends_trial: false,
@@ -163,7 +197,7 @@ function runSingleTrial(
     var dispHalfScene = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function() {
-            htmloutput = htmloutput.replace(`</div>`, ``);
+            // htmloutput = htmloutput.replace(`</div>`, ``);
             htmloutput += `<img src="${personLeft}" style="width: ${imgStripePeopleWidth}px; position: absolute; top: ${imgBackHeight*.18-(imgPeopleHeight/2)}px; left: ${imgBackWidth*.25-(imgPeopleWidth/2)}px; z-index: 999; transform: rotate(180deg);"></img></div>`;
             return htmloutput;
         },
@@ -181,73 +215,58 @@ function runSingleTrial(
 
     var dispFullScene = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: function() {
-            htmloutput = htmloutput.replace(`</div>`, ``);
-            htmloutput += `<img src="${personRight}" style="width: ${imgStripePeopleWidth}px; position: absolute; top: ${imgBackHeight*1.03-(imgPeopleHeight/2)}px; left: ${imgBackWidth*0.95-(imgPeopleWidth/2)}px;"></img></div>`
-            return htmloutput;
-        },
-        choices: ['f', 'j'],
-        trial_duration: null,
-        response_ends_trial: true,
+        stimulus: htmloutput+`</div>`,
+        choices: 'NO_KEYS',
+        trial_duration: dispTime,
+        response_ends_trial: false,
         prompt: `${persistent_prompt}`,
         data: {
             trial_category: 'answer'+trialType,
-            // trial_stimulus: thisStim,
+        } // data end
+    }; // dispScene
+
+
+    var holdResponse = {
+        type: jsPsychHtmlButtonSpaceHoldResponse,
+        // stimulus: `Now please try to <b>reproduce how long</b> the image stayed on screen. Click and hold down the button below for the same amount of time that you saw the image. <p>Releasing the button will <b>automatically submit</b> your response!</p><p>You have <b>only ONE try!</b></p>`,
+        stimulus: `Now try to replicate how long the image was on screen (Use the <u>Spacebar</u>):`,
+        choices: ["Click, hold, and release the Spacebar for the right amount of time!"],
+        show_hold_duration_feedback: false,
+        retries_allowed: null, // change to a number of allowed retries. Default is null.
+        data: {
+            trial_category: 'answer'+trialType,
+            trial_dispTime: dispTime,
             trial_rotation: trialRotation,
             shapes_rotation: rotation,
             trial_reflection: trialReflection,
-            stripe_angle_top: stripe_angle_top,
-            stripe_angle_bottom: stripe_angle_top-difficulty,
-            difficulty: difficulty,
             background_group: group,
-            identical: identical,
             screen_width: w,
             screen_height: h,
         }, // data end
         on_finish: function(data){
-            if (identical == true) {
-                if(data.response == 'f') {
-                    data.thisAcc = 1;
-                } else if (data.response == 'j') {
-                    data.thisAcc = 0;
-                } else {
-                    data.thisAcc = 99;
-                }
-            } else if (identical == false){
-                if(data.response == 'j') {
-                    data.thisAcc = 1;
-                } else if (data.response == 'f') {
-                    data.thisAcc = 0;
-                } else {
-                    data.thisAcc = 99;
-                }
-            }
+            data.thisDifference = data.hold_duration - (PERSON_ONE_DISP_TIME + PERSON_ONE_DISP_TIME + FULL_SCENE_DISP_TIME)
         } // on finish end
-    }; // dispScene
+    }; // holdResponse end
 
-
-
-
-    // var prestim = {
-    //     type: jsPsychHtmlKeyboardResponse,
-    //     stimulus: `<div> gray box</div>`,
-    //     prompt: `${persistent_prompt}`,
-    //     choices: "NO_KEYS",
-    //     trial_duration: PRESTIM_DISP_TIME,
-    //     data: {
-    //         trial_category: 'prestim_ISI' + trialType,
-    //     }
-    // };
+    var prestim = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size:60px; z-index:2">+</div>`,
+        prompt: `${persistent_prompt}`,
+        choices: "NO_KEYS",
+        trial_duration: CROSS_DISP_TIME,
+        data: {
+            trial_category: 'prestim_ISI' + trialType,
+        }
+    };
 
     var fixation = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `<div style="position: absolute; top: ${h/2-imgBorderHeight/2}px; left: ${w/2-imgBorderWidth/2}px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(${trialRotation}deg) scaleX(${trialReflection});">        
                 <img src="${stimFolder}background_border.png" style="width: ${imgBorderWidth}px; display:block;"></img> 
-        </div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size:60px; z-index:2">+</div>`,
+        </div>`,
         prompt: `${persistent_prompt}`,
         choices: "NO_KEYS",
-        trial_duration: FIXATION_DISP_TIME,
+        trial_duration: BACKGROUND_DISP_TIME,
         data: {
             trial_category: 'fixation' + trialType,
         }
@@ -266,14 +285,19 @@ function runSingleTrial(
 
 
     /*--------------------------- push single trial sequence ---------------------------*/
-
+    
     timelineTrialsToPush.push(if_notFull);
     timelineTrialsToPush.push(cursor_off);
-    // timelineTrialsToPush.push(prestim);
+    timelineTrialsToPush.push(prestim);
     timelineTrialsToPush.push(fixation); 
     timelineTrialsToPush.push(dispOneThirdScene); 
-    timelineTrialsToPush.push(dispHalfScene); 
+    //timelineTrialsToPush.push(dispHalfScene); 
     timelineTrialsToPush.push(dispFullScene); 
+    timelineTrialsToPush.push(holdResponse);
+    if((elem != 0) && (elem % 6 == 0)) { //attention check every 6 trials! (note: not inclusive of first trial?)
+        timelineTrialsToPush.push(cursor_on);
+        timelineTrialsToPush.push(attentionCheckAFC); 
+    };
     // timelineTrialsToPush.push(dispCircleSlider); // if you wanted to use the slider reproduction measurement tool
     timelineTrialsToPush.push(cursor_on);
 
