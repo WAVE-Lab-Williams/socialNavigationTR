@@ -156,7 +156,7 @@ function runSingleTrial(
         type: jsPsychHtmlButtonResponse,
         stimulus: `<h1>In the image you just saw, was there a person wearing red?</h1>`,
         choices: ['Yes', 'No'],
-        button_html: `<button style="background-color: #afafaf; border-width: 5px; border-radius: 14px; margin-bottom: 10px;" class="jspsych-btn image-choice">%choice%</button>`,
+        button_html: `<button style="background-color: #afafaf; border-width: 5px; border-radius: 14px; margin-bottom: 10px; font-size: 48px; width: ${imgWidth}px;" class="jspsych-btn image-choice">%choice%</button>`,
         data: {
             trial_category: "afc" + trialType
         },
