@@ -244,7 +244,7 @@ function runSingleTrial(
             screen_height: h,
         }, // data end
         on_finish: function(data){
-            data.thisDifference = data.hold_duration - (PERSON_ONE_DISP_TIME + PERSON_ONE_DISP_TIME + FULL_SCENE_DISP_TIME)
+            data.thisDifference = data.hold_duration - (dispTime);
         } // on finish end
     }; // holdResponse end
 

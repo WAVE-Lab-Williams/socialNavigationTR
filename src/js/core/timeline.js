@@ -246,7 +246,7 @@ console.log(full_design.length);
 forPreload.push(`${stimFolder}background_border.png`);
 for (var i = 0; i < allPeopleColors.length; i++) { // allPeopleColors is actually defined in params.js (so its loaded before timeline. Totally fine to use this variable.)
      forPreload.push(`${stimFolder}sitting/${allPeopleColors[i]}.png`);
-     forPreload.push(`${stimFolder}colors/${allPeopleColors[i]}.png`);
+     forPreload.push(`${stimFolder}${allPeopleColors[i]}.png`);
 }
 
 /* ------- timeline expt push (*pushExpt ) -------------- */
@@ -310,7 +310,7 @@ var closing = {
     }, // on finish complete
 };
 
-timelineclose.push(feedback_summary);
+//timelineclose.push(feedback_summary);
 timelineclose.push(debrief_qs);
 timelineclose.push({ type: jsPsychFullscreen, fullscreen_mode: false });
 timelineclose.push(closing);
