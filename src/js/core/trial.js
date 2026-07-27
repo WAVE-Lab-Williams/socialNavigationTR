@@ -166,10 +166,13 @@ function runSingleTrial(
                 data.thisAcc = 99;
             } else {
                 if(data.response == 0 && firstHalf.includes("red")) { 
-                    console.log("correct")
+                    console.log("correct");
                     data.thisAcc = 1;
-                } else {
-                    console.log("incorrect")
+                } else if(data.response == 1 && secondHalf.includes("red")) {
+                    console.log("correct");
+                    data.thisAcc = 1;
+                }else {
+                    console.log("incorrect");
                     data.thisAcc = 0;
                 }
             }
