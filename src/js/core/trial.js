@@ -165,7 +165,7 @@ function runSingleTrial(
             if (data.response == null) {
                 data.thisAcc = 99;
             } else {
-                if(data.response == 1 && firstHalf.includes("red")) { 
+                if(data.response == 0 && firstHalf.includes("red")) { 
                     console.log("correct")
                     data.thisAcc = 1;
                 } else {
