@@ -253,7 +253,7 @@ function runSingleTrial(
         stimulus: `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size:60px; z-index:2">+</div>`,
         prompt: `${persistent_prompt}`,
         choices: "NO_KEYS",
-        trial_duration: PRESTIM_DISP_TIME,
+        trial_duration: CROSS_DISP_TIME,
         data: {
             trial_category: 'prestim_ISI' + trialType,
         }
@@ -266,7 +266,7 @@ function runSingleTrial(
         </div>`,
         prompt: `${persistent_prompt}`,
         choices: "NO_KEYS",
-        trial_duration: FIXATION_DISP_TIME,
+        trial_duration: BACKGROUND_DISP_TIME,
         data: {
             trial_category: 'fixation' + trialType,
         }
