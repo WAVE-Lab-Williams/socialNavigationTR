@@ -1,0 +1,83 @@
+---
+title: "SocialNavigationTR"
+author: "Neel"
+date: "2026-07-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("C:/Users/mcpro/OneDrive/Documents/WAVE LAB/Code/socialNavigationTR/tools")
+
+library(tidyverse)
+library(paletteer)
+```
+
+
+```{r}
+all_data <- read.csv("data/dataframe_answer.csv", header=TRUE)
+attention_data <- read.csv("data/dataframe_attention.csv", header=TRUE)
+
+#delete all test data
+
+all_data <- all_data |>
+  filter(participant_id != "{{%PROLIFIC_PID%}}") |>
+  filter(!str_detect(participant_id, "no_query_worker"))
+
+length(unique(all_data$participant_id))
+
+uniq <- unique(all_data$participant_id)
+uniq
+
+length(uniq)
+```
+
+
+```{r}
+time_data <- all_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(error),
+    sd = sd(error),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+
+
+
+ggplot(time_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Reproduction Performance", x="Group Condition", y= "Hold Duration - Time on Screen") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+#grouped_data_acc <- all_data |>
+  # group_by(participant_id, background_group) |>
+  # summarize(mean_rt = mean(response_time), mean_acc = mean(accuracy)) |>
+  # ungroup()
+
+
+# grouped_data_acc$background_group = as.factor(grouped_data_acc$background_group)
+# 
+# 
+# 
+# 
+# acc_anova <- aov_ez(id = "participant_id", 
+#                    dv = "mean_acc", 
+#                    data = grouped_data_acc, 
+#                    within = "background_group")
+# 
+# summary(acc_anova)
+# 
+# library(emmeans)
+# 
+# acc_hoc <- emmeans(acc_anova, ~background_group)
+# 
+# pairs(acc_hoc, adjust = "tukey")
+
+
+
+```

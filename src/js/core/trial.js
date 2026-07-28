@@ -150,7 +150,7 @@ function runSingleTrial(
     // afcChoices = shuffle(afcChoices);
     
 
-    var [firstHalf, secondHalf] = cutArray(allPeople);
+    var [firstHalf, secondHalf] = cutArray(allPeople, 5);
 
     var attentionCheckAFC = {
         type: jsPsychHtmlButtonResponse,
@@ -165,11 +165,14 @@ function runSingleTrial(
             if (data.response == null) {
                 data.thisAcc = 99;
             } else {
-                if(data.response == 1 && firstHalf.includes("red")) { 
-                    console.log("correct")
+                if(data.response == 0 && firstHalf.includes("red")) { 
+                    console.log("correct");
                     data.thisAcc = 1;
-                } else {
-                    console.log("incorrect")
+                } else if(data.response == 1 && secondHalf.includes("red")) {
+                    console.log("correct");
+                    data.thisAcc = 1;
+                }else {
+                    console.log("incorrect");
                     data.thisAcc = 0;
                 }
             }
@@ -221,9 +224,9 @@ function runSingleTrial(
         response_ends_trial: false,
         prompt: `${persistent_prompt}`,
         data: {
-            trial_category: 'answer'+trialType,
+            trial_category: 'dispFull'+trialType,
         } // data end
-    }; // dispScene
+    }; // dispScene end
 
 
     var holdResponse = {
