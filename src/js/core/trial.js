@@ -224,9 +224,9 @@ function runSingleTrial(
         response_ends_trial: false,
         prompt: `${persistent_prompt}`,
         data: {
-            trial_category: 'answer'+trialType,
+            trial_category: 'dispFull'+trialType,
         } // data end
-    }; // dispScene
+    }; // dispScene end
 
 
     var holdResponse = {
