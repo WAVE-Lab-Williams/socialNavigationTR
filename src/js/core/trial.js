@@ -150,7 +150,7 @@ function runSingleTrial(
     // afcChoices = shuffle(afcChoices);
     
 
-    var [firstHalf, secondHalf] = cutArray(allPeople);
+    var [firstHalf, secondHalf] = cutArray(allPeople, 5);
 
     var attentionCheckAFC = {
         type: jsPsychHtmlButtonResponse,
