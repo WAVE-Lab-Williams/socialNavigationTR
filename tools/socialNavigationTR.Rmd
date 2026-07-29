@@ -15,17 +15,28 @@ library(paletteer)
 
 
 ```{r}
+#read in data
+
 all_data <- read.csv("data/dataframe_answer.csv", header=TRUE)
 attention_data <- read.csv("data/dataframe_attention.csv", header=TRUE)
+debrief_data <- read.csv("data/dataframe_debrief.csv", header=TRUE)
 
-#delete all test data
+
+#remove all test data
 
 all_data <- all_data |>
   filter(participant_id != "{{%PROLIFIC_PID%}}") |>
   filter(!str_detect(participant_id, "no_query_worker"))
 
-length(unique(all_data$participant_id))
+attention_data <- attention_data |>
+  filter(participant_id != "{{%PROLIFIC_PID%}}") |>
+  filter(!str_detect(participant_id, "no_query_worker"))
 
+debrief_data <- debrief_data |>
+  filter(participant_id != "{{%PROLIFIC_PID%}}") |>
+  filter(!str_detect(participant_id, "no_query_worker"))
+
+#sanity check
 uniq <- unique(all_data$participant_id)
 uniq
 
@@ -34,7 +45,103 @@ length(uniq)
 
 
 ```{r}
-time_data <- all_data |>
+#CLEAN DATA 
+
+
+#First, clean out people who weren't paying attention:
+
+
+attn_by_id <- attention_data |>
+  group_by(participant_id) |> 
+  summarise(total_acc = sum(thisAcc))
+
+clean_attn_by_id <- attn_by_id |>
+  filter(total_acc >= 5)
+  
+#Attention by our debrief this time
+
+library(purrr)
+library(jsonlite)
+
+
+to_remove_debrief_by_id <- debrief_data |>
+  group_by(participant_id) |>
+  mutate(response_parsed = map(response, fromJSON)) |>
+  hoist(response_parsed, attention = "attention") |>
+  mutate(attention = as.numeric(attention)) |>
+  filter(attention < 85)
+
+#add attn and debreif together for ease
+
+clean_attn_by_id <- clean_attn_by_id |>
+  filter(!participant_id %in% to_remove_debrief_by_id$participant_id)
+
+#how much did we remove? 
+nrow(attn_by_id) - nrow(clean_attn_by_id)
+
+```
+
+```{r}
+#now clean_attn_by_id has our "good" participants
+all_data_clean <- all_data |>
+  filter(participant_id %in% clean_attn_by_id$participant_id)
+  
+  
+```  
+
+
+```{r}
+#pasted from our last meeting on how to select participants & trials outside of a certain bounds
+
+df_gb_pid <- all_data_clean |>
+  group_by(participant_id) |>
+  summarize(num_trials = n(),
+            meanRT = mean(error),
+            sdRT = sd(error))
+#note: we didn't filter out people who didn't do enough trials here
+
+
+
+
+grand_meanRT <- mean(df_gb_pid$meanRT)
+grand_sdRT <- sd(df_gb_pid$meanRT)
+
+sd_threshold <- 2.0
+
+upper_bound <- grand_meanRT + sd_threshold * grand_sdRT
+lower_bound <- grand_meanRT - sd_threshold * grand_sdRT
+
+df_gb_pid <- df_gb_pid |>
+  filter(num_trials > 45) |> ## change num as needed
+  filter(meanRT < upper_bound & meanRT > lower_bound)
+
+
+good_participants <- df_gb_pid$participant_id
+
+#nrow(all_data) - nrow(short_data) #num rows removed
+```
+
+```{r}
+#exclude individual trials that are X sd from a given participant's mean RT
+
+raw_good_data <- all_data_clean |>
+  filter(participant_id %in% good_participants) 
+# 
+# middle_df <- df_gb_pid |>
+#   select(participant_id, meanRT)
+  
+individual_trial_sd_threshold <- 2
+
+fused_ind_exclude <- left_join(raw_good_data, df_gb_pid,
+              by = "participant_id") |>
+  filter(response_time > meanRT - individual_trial_sd_threshold * sdRT & response_time < meanRT + individual_trial_sd_threshold * sdRT)
+```
+
+
+
+```{r}
+#now plot!
+time_data <- fused_ind_exclude |>
   group_by(background_group) |>
   summarize(
     mean = mean(error),
@@ -54,29 +161,29 @@ ggplot(time_data, aes(x=background_group, y=mean, fill=background_group)) +
   geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
 
 
-#grouped_data_acc <- all_data |>
-  # group_by(participant_id, background_group) |>
-  # summarize(mean_rt = mean(response_time), mean_acc = mean(accuracy)) |>
-  # ungroup()
+grouped_data_time <- fused_ind_exclude |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_error = mean(error)) |>
+  ungroup()
 
 
-# grouped_data_acc$background_group = as.factor(grouped_data_acc$background_group)
-# 
-# 
-# 
-# 
-# acc_anova <- aov_ez(id = "participant_id", 
-#                    dv = "mean_acc", 
-#                    data = grouped_data_acc, 
-#                    within = "background_group")
-# 
-# summary(acc_anova)
-# 
-# library(emmeans)
-# 
-# acc_hoc <- emmeans(acc_anova, ~background_group)
-# 
-# pairs(acc_hoc, adjust = "tukey")
+grouped_data_time$background_group = as.factor(grouped_data_time$background_group)
+
+
+library(afex)
+
+time_anova <- aov_ez(id = "participant_id",
+                   dv = "mean_error",
+                   data = grouped_data_time,
+                   within = "background_group")
+
+summary(time_anova)
+
+library(emmeans)
+
+time_hoc <- emmeans(time_anova, ~background_group)
+
+pairs(time_hoc, adjust = "tukey")
 
 
 
