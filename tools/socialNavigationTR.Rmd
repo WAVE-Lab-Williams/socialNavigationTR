@@ -26,15 +26,21 @@ debrief_data <- read.csv("data/dataframe_debrief.csv", header=TRUE)
 
 all_data <- all_data |>
   filter(participant_id != "{{%PROLIFIC_PID%}}") |>
-  filter(!str_detect(participant_id, "no_query_worker"))
+  filter(!str_detect(participant_id, "no_query_worker")) |>
+  filter(participant_id != "5f031154d2fab64a687af6db") |>
+  filter(participant_id != "69a335cdd0de6030573dbd20")
 
 attention_data <- attention_data |>
   filter(participant_id != "{{%PROLIFIC_PID%}}") |>
-  filter(!str_detect(participant_id, "no_query_worker"))
+  filter(!str_detect(participant_id, "no_query_worker")) |>
+  filter(participant_id != "5f031154d2fab64a687af6db") |>
+  filter(participant_id != "69a335cdd0de6030573dbd20")
 
 debrief_data <- debrief_data |>
   filter(participant_id != "{{%PROLIFIC_PID%}}") |>
-  filter(!str_detect(participant_id, "no_query_worker"))
+  filter(!str_detect(participant_id, "no_query_worker")) |>
+  filter(participant_id != "5f031154d2fab64a687af6db") |>
+  filter(participant_id != "69a335cdd0de6030573dbd20")
 
 #sanity check
 uniq <- unique(all_data$participant_id)
@@ -56,7 +62,7 @@ attn_by_id <- attention_data |>
   summarise(total_acc = sum(thisAcc))
 
 clean_attn_by_id <- attn_by_id |>
-  filter(total_acc >= 5)
+  filter(total_acc >= 4)
   
 #Attention by our debrief this time
 
@@ -76,7 +82,7 @@ to_remove_debrief_by_id <- debrief_data |>
 clean_attn_by_id <- clean_attn_by_id |>
   filter(!participant_id %in% to_remove_debrief_by_id$participant_id)
 
-#how much did we remove? 
+#how many did we exclude? 
 nrow(attn_by_id) - nrow(clean_attn_by_id)
 
 ```
@@ -118,30 +124,32 @@ df_gb_pid <- df_gb_pid |>
 
 good_participants <- df_gb_pid$participant_id
 
-#nrow(all_data) - nrow(short_data) #num rows removed
+nrow(clean_attn_by_id) - nrow(df_gb_pid) #num rows removed
 ```
 
 ```{r}
-#exclude individual trials that are X sd from a given participant's mean RT
-
-raw_good_data <- all_data_clean |>
-  filter(participant_id %in% good_participants) 
+# #exclude individual trials that are X sd from a given participant's mean RT
 # 
-# middle_df <- df_gb_pid |>
-#   select(participant_id, meanRT)
-  
-individual_trial_sd_threshold <- 2
+raw_good_data <- all_data_clean |>
+   filter(participant_id %in% good_participants) 
 
-fused_ind_exclude <- left_join(raw_good_data, df_gb_pid,
-              by = "participant_id") |>
-  filter(response_time > meanRT - individual_trial_sd_threshold * sdRT & response_time < meanRT + individual_trial_sd_threshold * sdRT)
+nrow(all_data_clean) - nrow(raw_good_data)
+# # 
+# # middle_df <- df_gb_pid |>
+# #   select(participant_id, meanRT)
+#   
+# individual_trial_sd_threshold <- 2
+# 
+# fused_ind_exclude <- left_join(raw_good_data, df_gb_pid,
+#               by = "participant_id") |>
+#   filter(response_time > meanRT - individual_trial_sd_threshold * sdRT & response_time < meanRT + individual_trial_sd_threshold * sdRT)
 ```
 
 
 
 ```{r}
 #now plot!
-time_data <- fused_ind_exclude |>
+time_data <- all_data_clean |>
   group_by(background_group) |>
   summarize(
     mean = mean(error),
@@ -161,7 +169,7 @@ ggplot(time_data, aes(x=background_group, y=mean, fill=background_group)) +
   geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
 
 
-grouped_data_time <- fused_ind_exclude |>
+grouped_data_time <- all_data_clean |>
   group_by(participant_id, background_group) |>
   summarize(mean_error = mean(error)) |>
   ungroup()
