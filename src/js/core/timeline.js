@@ -226,7 +226,7 @@ EXPERIMENT SECTION (*sec_expt)
 
 /* -------- defining factors && exptdesign (*factors) --------*/
 
-var poss_dispTimes = [1000, 1666, 2333, 3000];
+var poss_dispTimes = [600, 800, 1000, 1200];
 var poss_rotations = [0, Math.PI/2, Math.PI];
 var poss_groups = ["H_H","H_L","L_H","L_L"]; // H -> High Mobility; L -> Low Mobility
 

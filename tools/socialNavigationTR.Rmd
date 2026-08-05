@@ -90,13 +90,20 @@ nrow(attn_by_id) - nrow(clean_attn_by_id)
 ```{r}
 #now clean_attn_by_id has our "good" participants
 all_data_clean <- all_data |>
-  filter(participant_id %in% clean_attn_by_id$participant_id)
+  filter(participant_id %in% clean_attn_by_id$participant_id) |>
+  mutate(logProportion = log(hold_duration/display_time)) |>
+  mutate(logError = ifelse(log(abs(error)) == -Inf, 0, log(abs(error))))
+
+
   
   
 ```  
 
 
 ```{r}
+#SKIP
+
+
 #pasted from our last meeting on how to select participants & trials outside of a certain bounds
 
 df_gb_pid <- all_data_clean |>
@@ -128,6 +135,9 @@ nrow(clean_attn_by_id) - nrow(df_gb_pid) #num rows removed
 ```
 
 ```{r}
+#SKIP
+
+
 # #exclude individual trials that are X sd from a given participant's mean RT
 # 
 raw_good_data <- all_data_clean |>
@@ -152,8 +162,8 @@ nrow(all_data_clean) - nrow(raw_good_data)
 time_data <- all_data_clean |>
   group_by(background_group) |>
   summarize(
-    mean = mean(error),
-    sd = sd(error),
+    mean = mean(logError),
+    sd = sd(logError),
     n = n(),
     se = sd/sqrt(n)
   )
@@ -165,7 +175,7 @@ time_data <- all_data_clean |>
 ggplot(time_data, aes(x=background_group, y=mean, fill=background_group)) +
   geom_col() +
   geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
-  labs(title = "Reproduction Performance", x="Group Condition", y= "Hold Duration - Time on Screen") +
+  labs(title = "Reproduction Performance", x="Group Condition", y= "log(Hold Duration - Time on Screen)") +
   geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
 
 
@@ -196,3 +206,575 @@ pairs(time_hoc, adjust = "tukey")
 
 
 ```
+
+```{r}
+#question: are there any performance differences by disp_time?
+
+dispTime_data <- all_data_clean |>
+  group_by(display_time) |>
+  summarize(
+    mean = mean(error),
+    sd = sd(error),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+  
+
+
+ggplot(dispTime_data, aes(x=display_time, y=mean, fill=display_time)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time", x="Time on Screen", y= "Hold Duration - Time on Screen") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+```
+
+
+```{r}
+#lets swap metrics to log(holdDuration)
+
+prop_data <- all_data_clean |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(prop_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+
+grouped_data_prop <- all_data_clean |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop$background_group = as.factor(grouped_data_prop$background_group)
+
+
+library(afex)
+
+prop_anova <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop,
+                   within = "background_group")
+
+summary(prop_anova)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+
+```
+
+
+
+```{r}
+#next: first half second half, all group conditions for each disp_time, trials after attention checks, rotations, reflections?
+
+firstHalf_data <- all_data_clean |>
+  arrange(participant_id, trial_number) |>
+  group_by(participant_id) |>
+  slice_head(prop = 0.25) |>
+  ungroup()
+
+secondHalf_data <- all_data_clean |>
+  arrange(participant_id, trial_number) |>
+  group_by(participant_id) |>
+  slice_tail(prop = 0.75) |>
+  ungroup()
+
+
+
+```
+
+
+
+```{r}
+
+#testing first half for anything
+
+prop_data_FH <- firstHalf_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(prop_data_FH, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, First Half", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_FH <- firstHalf_data |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_FH$background_group = as.factor(grouped_data_prop_FH$background_group)
+
+
+library(afex)
+
+prop_anova_FH <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_FH,
+                   within = "background_group")
+
+summary(prop_anova_FH)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_FH, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+
+```
+
+```{r}
+#what about second half?
+
+prop_data_SH <- secondHalf_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(prop_data_SH, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, Second Half", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_SH <- secondHalf_data |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_SH$background_group = as.factor(grouped_data_prop_SH$background_group)
+
+
+library(afex)
+
+prop_anova_SH <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_SH,
+                   within = "background_group")
+
+summary(prop_anova_SH)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_SH, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+
+
+
+```
+
+
+```{r}
+
+#test group_condition for 1000ms disptime
+
+oneK_data <- all_data_clean |>
+  filter(display_time == 1000)
+
+oneK_group_data <- oneK_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(oneK_group_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, 1000ms Trial", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_oneK <- oneK_data |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_oneK$background_group = as.factor(grouped_data_prop_oneK$background_group)
+
+
+library(afex)
+
+prop_anova_oneK <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_oneK,
+                   within = "background_group")
+
+summary(prop_anova_oneK)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_oneK, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+
+
+```
+
+
+```{r}
+
+#test group_condition for 1666ms disptime
+
+oneSix_data <- all_data_clean |>
+  filter(display_time == 1666)
+
+oneSix_group_data <- oneSix_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(oneSix_group_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, 1666ms Trial", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_oneSix <- oneSix_data |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_oneSix$background_group = as.factor(grouped_data_prop_oneSix$background_group)
+
+
+library(afex)
+
+prop_anova_oneSix <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_oneSix,
+                   within = "background_group")
+
+summary(prop_anova_oneSix)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_oneSix, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+
+
+```
+
+```{r}
+#test group_condition for 2333ms disptime
+
+twoK_data <- all_data_clean |>
+  filter(display_time == 2333)
+
+twoK_group_data <- twoK_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(twoK_group_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, 2333ms Trial", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_twoK <- twoK_data |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_twoK$background_group = as.factor(grouped_data_prop_twoK$background_group)
+
+
+library(afex)
+
+prop_anova_twoK <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_twoK,
+                   within = "background_group")
+
+summary(prop_anova_twoK)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_twoK, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+
+
+```
+
+
+
+
+```{r}
+
+#test group_condition for 3000ms disptime
+
+threeK_data <- all_data_clean |>
+  filter(display_time == 3000)
+
+threeK_group_data <- threeK_data |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(threeK_group_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, 3000ms Trial", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_threeK <- threeK_data |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_threeK$background_group = as.factor(grouped_data_prop_threeK$background_group)
+
+
+library(afex)
+
+prop_anova_threeK <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_threeK,
+                   within = "background_group")
+
+summary(prop_anova_threeK)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_threeK, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+```
+
+
+```{r}
+#does rotation affect anything?
+
+
+rot_group_data <- all_data_clean |>
+  group_by(trial_rotation) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(rot_group_data, aes(x=trial_rotation, y=mean, fill=trial_rotation)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Trial Rotation", x="Rotation (Degrees)", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_rot <- all_data_clean |>
+  group_by(participant_id, trial_rotation) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_rot$trial_rotation = as.factor(grouped_data_prop_rot$trial_rotation)
+
+
+library(afex)
+
+prop_anova_rot <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_rot,
+                   within = "trial_rotation")
+
+summary(prop_anova_rot)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_rot, ~trial_rotation)
+
+pairs(prop_hoc, adjust = "tukey")
+
+
+
+```
+
+
+```{r}
+
+#reflection maybe?
+
+ref_group_data <- all_data_clean |>
+  group_by(trial_reflection) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+ggplot(ref_group_data, aes(x=trial_reflection, y=mean, fill=trial_reflection)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Trial Reflection", x="Rotation (Degrees)", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_ref <- all_data_clean |>
+  group_by(participant_id, trial_reflection) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_ref$trial_reflection = as.factor(grouped_data_prop_ref$trial_reflection)
+
+
+library(afex)
+
+prop_anova_ref <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_ref,
+                   within = "trial_reflection")
+
+summary(prop_anova_ref)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_ref, ~trial_reflection)
+
+pairs(prop_hoc, adjust = "tukey")
+
+#pivot.longer()
+#pivot.wider()
+
+
+```
+
+
+```{r}
+#trials after attention check?
+
+postAttn <- all_data_clean |>
+  arrange(participant_id, trial_number) |>
+  group_by(participant_id) |>
+  filter(row_number() %% 7 == 0) |>
+  ungroup()
+
+postAttn_group_data <- postAttn |>
+  group_by(background_group) |>
+  summarize(
+    mean = mean(logProportion),
+    sd = sd(logProportion),
+    n = n(),
+    se = sd/sqrt(n)
+  )
+
+
+ggplot(postAttn_group_data, aes(x=background_group, y=mean, fill=background_group)) +
+  geom_col() +
+  geom_errorbar(aes(ymin= mean - se, ymax = mean + se)) +
+  labs(title = "Error by Display Time, Trials After Attention Check", x="Time on Screen", y= "Log(Hold Duration)") +
+  geom_hline(yintercept = 0, color="black", linetype = "dashed", linewidth = 0.5)
+
+
+grouped_data_prop_postAttn <- postAttn |>
+  group_by(participant_id, background_group) |>
+  summarize(mean_logProp = mean(logProportion)) |>
+  ungroup()
+
+
+grouped_data_prop_postAttn$background_group = as.factor(grouped_data_prop_postAttn$background_group)
+
+
+library(afex)
+
+prop_anova_postAttn <- aov_ez(id = "participant_id",
+                   dv = "mean_logProp",
+                   data = grouped_data_prop_postAttn,
+                   within = "background_group")
+
+summary(prop_anova_postAttn)
+
+library(emmeans)
+
+prop_hoc <- emmeans(prop_anova_postAttn, ~background_group)
+
+pairs(prop_hoc, adjust = "tukey")
+
+```
+
+
